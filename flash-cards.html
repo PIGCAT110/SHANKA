@@ -588,6 +588,82 @@ h1.title sup{
   100%{opacity:0;transform:translate(-50%,-50%) scale(2.1);}
 }
 
+/* ============ LENTICULAR FUSION 光栅融合 ============ */
+.lenticular{
+  position:relative;
+  width:var(--card-w);
+  height:calc(var(--card-w) * var(--card-ar));
+  border-radius:var(--radius);
+  transform-style:preserve-3d;
+  transform:
+    rotateX(calc((.5 - var(--ny,.5)) * 30deg * var(--tilt)))
+    rotateY(calc((var(--nx,.5) - .5) * 34deg * var(--tilt)));
+  transition:transform .22s ease-out, box-shadow .5s ease;
+  box-shadow:
+    0 46px 80px -42px rgba(0,0,0,.95),
+    0 24px 48px -30px rgba(0,0,0,.9),
+    0 34px 90px -52px var(--glow, rgba(140,110,255,.4));
+  display:none;
+  will-change:transform;
+}
+.fused-mode .slot{display:none;}
+.fused-mode .lenticular{display:block;}
+
+.lenticular .face{
+  position:absolute;inset:0;
+  border-radius:var(--radius);
+  overflow:hidden;
+  background:#0a0a0d;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.05),
+    inset 0 1px 0 rgba(255,255,255,.22),
+    inset 0 -5px 12px rgba(0,0,0,.6),
+    inset -3px 0 6px rgba(0,0,0,.32),
+    inset 3px 0 6px rgba(0,0,0,.28);
+}
+.lenticular__stack{
+  position:absolute;inset:0;
+}
+.lenticular__layer{
+  position:absolute;inset:0;
+  -webkit-mask-image: repeating-linear-gradient(90deg,
+    #000 0 var(--lstrip,3px),
+    transparent var(--lstrip,3px) calc(var(--lstrip,3px) * 3));
+  mask-image: repeating-linear-gradient(90deg,
+    #000 0 var(--lstrip,3px),
+    transparent var(--lstrip,3px) calc(var(--lstrip,3px) * 3));
+  -webkit-mask-size: calc(var(--lstrip,3px) * 3) 100%;
+  mask-size: calc(var(--lstrip,3px) * 3) 100%;
+  -webkit-mask-position-x: calc(var(--phase,0) * var(--lstrip,3px) + (var(--nx,.5) - .5) * var(--lstrip,3px) * 2);
+  mask-position-x: calc(var(--phase,0) * var(--lstrip,3px) + (var(--nx,.5) - .5) * var(--lstrip,3px) * 2);
+  -webkit-mask-repeat:repeat;
+  mask-repeat:repeat;
+}
+.lenticular__layer img{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  object-position:50% 42%;
+  user-select:none;-webkit-user-drag:none;
+}
+/* 透镜脊线 / cylindrical lens ridges */
+.lenticular__lens{
+  position:absolute;inset:0;
+  background: repeating-linear-gradient(90deg,
+    rgba(255,255,255,.12) 0 1px,
+    rgba(0,0,0,.18) 1px 2px,
+    transparent 2px var(--lstrip,3px));
+  mix-blend-mode:overlay;
+  opacity:.55;
+  pointer-events:none;
+}
+/* 降低全息叠加强度，让光栅底图更清晰 */
+.lenticular .holo-a{opacity:calc(var(--flash) * .08);}
+.lenticular .holo-b{opacity:calc(var(--flash) * .26);}
+.lenticular .holo-spin{opacity:calc(var(--flash) * .05);}
+.lenticular .facets{opacity:calc(var(--facet-depth) * .38);}
+.lenticular .facets-b{opacity:calc(var(--facet-depth) * .3);}
+
 /* ============ CAPTION ============ */
 .cap{
   margin:26px 0 0;
@@ -1012,6 +1088,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:
           { v:'1.5', label:'2 : 3 原图' }, { v:'1.4487', label:'292 : 423' },
           { v:'1.3333', label:'3 : 4' }, { v:'1.25', label:'4 : 5' } ] },
       { k:'ticket', label:'票券缺口', en:'TICKET', type:'toggle', def:true },
+      { k:'fused',  label:'光栅融合', en:'LENTICULAR', type:'toggle', def:false },
       { k:'notch',  label:'缺口半径', en:'NOTCH',  min:0, max:26, step:1, unit:'px', def:13 }
     ]},
     { no:'02', title:'闪光', en:'FLASH', rows:[
@@ -1037,7 +1114,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:
   ];
 
   const DEFAULTS = {
-    width:256, radius:26, ratio:1.5, ticket:true, notch:13,
+    width:256, radius:26, ratio:1.5, ticket:true, fused:false, notch:13,
     flash:100, sweep:5.4, sparkle:8, beat:7,
     facet:44, depth:55, ribs:20, grain:32,
     angle:210, flow:32, tilt:65, float:8,
@@ -1193,6 +1270,51 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:
     });
   }
 
+  /* ---------------- lenticular fusion ---------------- */
+  function buildLenticular(){
+    const wrap = document.createElement('div');
+    wrap.className = 'lenticular';
+    wrap.dataset.key = 'fused';
+    wrap.style.setProperty('--lstrip', '7px');
+
+    const layers = POSTERS.map((p, i)=>
+      '<div class="lenticular__layer" style="--phase:' + i + '">' +
+        '<img src="' + IMGS[p.key] + '" alt="' + p.name + '" draggable="false">' +
+      '</div>'
+    ).join('');
+
+    wrap.innerHTML =
+      '<div class="face">' +
+        '<div class="lenticular__stack">' + layers + '</div>' +
+        '<div class="holo holo-spin"></div>' +
+        '<div class="holo holo-a"></div>' +
+        '<div class="holo holo-b"></div>' +
+        '<div class="facets"></div>' +
+        '<div class="facets facets-b"></div>' +
+        '<div class="ribs"></div>' +
+        '<div class="grain"></div>' +
+        '<div class="sheen"></div>' +
+        '<div class="sheen sheen--narrow"></div>' +
+        '<div class="glare"></div>' +
+        '<div class="sparkles"></div>' +
+        '<div class="hero-star"></div>' +
+        '<div class="vignette"></div>' +
+        '<div class="burst"></div>' +
+        '<div class="burst-star"></div>' +
+        '<div class="rim"></div>' +
+        '<div class="edge-light"></div>' +
+        '<div class="lenticular__lens"></div>' +
+      '</div>';
+
+    deck.appendChild(wrap);
+    buildSparks(wrap.querySelector('.sparkles'), 99);
+    bindTilt(wrap);
+  }
+
+  function applyFused(){
+    app.classList.toggle('fused-mode', !!state.fused);
+  }
+
   function buildSparks(container, idx){
     const rand = mulberry32(idx * 977 + 31);
     for(let k=0;k<14;k++){
@@ -1208,34 +1330,38 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:
     }
   }
 
-  function bindCard(card){
+  function bindTilt(el){
     let raf = 0;
-    card.addEventListener('pointermove', (e)=>{
+    el.addEventListener('pointermove', (e)=>{
       if(raf) return;
       raf = requestAnimationFrame(()=>{
         raf = 0;
-        const r = card.getBoundingClientRect();
+        const r = el.getBoundingClientRect();
         const nx = clamp((e.clientX - r.left) / r.width, 0, 1);
         const ny = clamp((e.clientY - r.top) / r.height, 0, 1);
-        card.style.setProperty('--nx', nx.toFixed(3));
-        card.style.setProperty('--ny', ny.toFixed(3));
-        card.style.setProperty('--mx', (nx * 100).toFixed(1) + '%');
-        card.style.setProperty('--my', (ny * 100).toFixed(1) + '%');
+        el.style.setProperty('--nx', nx.toFixed(3));
+        el.style.setProperty('--ny', ny.toFixed(3));
+        el.style.setProperty('--mx', (nx * 100).toFixed(1) + '%');
+        el.style.setProperty('--my', (ny * 100).toFixed(1) + '%');
       });
     });
-    card.addEventListener('pointerleave', ()=>{
-      card.style.setProperty('--nx', '.5');
-      card.style.setProperty('--ny', '.5');
-      card.style.setProperty('--mx', '50%');
-      card.style.setProperty('--my', '50%');
+    el.addEventListener('pointerleave', ()=>{
+      el.style.setProperty('--nx', '.5');
+      el.style.setProperty('--ny', '.5');
+      el.style.setProperty('--mx', '50%');
+      el.style.setProperty('--my', '50%');
     });
-    card.addEventListener('click', (e)=>{
-      const r = card.getBoundingClientRect();
+    el.addEventListener('click', (e)=>{
+      const r = el.getBoundingClientRect();
       const nx = clamp((e.clientX - r.left) / r.width, 0, 1);
       const ny = clamp((e.clientY - r.top) / r.height, 0, 1);
-      burst(card, nx, ny);
-      selectCard(card);
+      burst(el, nx, ny);
     });
+  }
+
+  function bindCard(card){
+    bindTilt(card);
+    card.addEventListener('click', ()=>selectCard(card));
   }
 
   function selectCard(card){
@@ -1334,7 +1460,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:
             state[row.k] = !state[row.k];
             btn.classList.toggle('on', state[row.k]);
             btn.setAttribute('aria-checked', state[row.k] ? 'true' : 'false');
-            app.classList.toggle('no-ticket', !state[row.k]);
+            applyKey(row.k);
           });
         } else {
           const range = document.getElementById('r-' + row.k);
@@ -1418,6 +1544,8 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:
       case 'flow':   root.style.setProperty('--flow', Math.max(v/100, .001).toFixed(3)); break;
       case 'tilt':   root.style.setProperty('--tilt', (v/100).toFixed(3)); break;
       case 'float':  root.style.setProperty('--float', v + 'px'); break;
+      case 'ticket': app.classList.toggle('no-ticket', !state.ticket); break;
+      case 'fused':  applyFused(); break;
     }
   }
 
@@ -1434,6 +1562,16 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:
       slot.style.setProperty('--h3', cols[2]);
       slot.style.setProperty('--glow', hexToRgba(cols[2], .42));
     });
+
+    // lenticular card uses the first poster's (or shared) palette
+    const lent = deck.querySelector('.lenticular');
+    if(lent){
+      const cols = shared || POSTERS[0].colors;
+      lent.style.setProperty('--h1', cols[0]);
+      lent.style.setProperty('--h2', cols[1]);
+      lent.style.setProperty('--h3', cols[2]);
+      lent.style.setProperty('--glow', hexToRgba(cols[2], .42));
+    }
   }
 
   function applySparkle(){
@@ -1471,7 +1609,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:
             btn.classList.toggle('on', !!state[row.k]);
             btn.setAttribute('aria-checked', state[row.k] ? 'true' : 'false');
           }
-          app.classList.toggle('no-ticket', !state.ticket);
+          applyKey(row.k);
         } else {
           const range = document.getElementById('r-' + row.k);
           const num = document.getElementById('n-' + row.k);
@@ -1516,6 +1654,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:
     root.style.setProperty('--grain-img', 'url("' + grain + '")');
 
     buildDeck();
+    buildLenticular();
     renderPanel();
     bindPanel();
     syncAll();
