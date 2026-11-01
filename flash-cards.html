@@ -30,6 +30,7 @@
   --flow:.32;
   --tilt:.65;
   --float:8px;
+  --thick:14px;
   --hue:0deg;
   --facet-img:none;
   --grain-img:none;
@@ -188,8 +189,8 @@ h1.title sup{
   display:flex;
   align-items:flex-start;
   justify-content:center;
-  gap:clamp(14px,2.8vw,52px);
-  perspective:1500px;
+  gap:clamp(30px,5vw,90px);
+  perspective:1600px;
   perspective-origin:50% 45%;
 }
 .slot{
@@ -208,6 +209,58 @@ h1.title sup{
   to{opacity:1;transform:rotate(var(--fan)) translateY(var(--fan-y)) scale(1);}
 }
 .slot:hover{z-index:20;}
+
+/* --- 独立选择态 / selected --- */
+.slot.selected{
+  z-index:30;
+}
+.slot.selected .lift{
+  transform:translateY(-34px) scale(1.05);
+}
+.slot.selected .card{
+  box-shadow:
+    0 52px 92px -42px rgba(0,0,0,.96),
+    0 30px 60px -30px rgba(0,0,0,.92),
+    0 42px 100px -52px var(--glow, rgba(140,110,255,.5)),
+    0 0 0 2px rgba(215,255,76,.72),
+    0 0 36px -2px rgba(215,255,76,.42);
+  transition:transform .22s ease-out, box-shadow .4s ease;
+}
+.slot.selected .card::before{opacity:1;}
+.slot.selected .cap__idx{
+  background:rgba(215,255,76,.16);
+  border-color:rgba(215,255,76,.65);
+  color:var(--accent);
+  box-shadow:0 0 12px rgba(215,255,76,.32);
+}
+.slot.selected .cap__meta strong{
+  color:var(--accent);
+  text-shadow:0 0 14px rgba(215,255,76,.38);
+}
+.slot.selected .cap__swatch{
+  box-shadow:0 0 10px rgba(215,255,76,.8);
+  transform:scale(1.35);
+}
+.slot.selected .select-badge{
+  opacity:1;
+  transform:translate(-50%,-50%) scale(1);
+}
+.select-badge{
+  position:absolute;
+  left:14px;top:14px;
+  width:26px;height:26px;
+  border-radius:50%;
+  background:linear-gradient(145deg, rgba(215,255,76,.95), rgba(180,220,40,.85));
+  display:grid;place-items:center;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:14px;font-weight:600;color:#0a0a0e;
+  box-shadow:0 4px 14px rgba(215,255,76,.45), inset 0 1px 0 rgba(255,255,255,.6);
+  opacity:0;
+  transform:translate(-50%,-50%) scale(.4);
+  transition:opacity .35s cubic-bezier(.2,.75,.2,1), transform .35s cubic-bezier(.2,.75,.2,1);
+  z-index:6;
+  pointer-events:none;
+}
 
 .card{
   position:relative;
@@ -238,6 +291,24 @@ h1.title sup{
 }
 .card:hover::before{opacity:.95;}
 
+/* --- 厚度背板 / back plate --- */
+.card::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:var(--radius);
+  background:
+    linear-gradient(165deg, #23212c 0%, #15131b 42%, #0a090e 100%);
+  transform:translateZ(calc(var(--thick) * -1));
+  z-index:-2;
+  pointer-events:none;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    inset 0 -3px 8px rgba(0,0,0,.85),
+    inset -2px 0 4px rgba(0,0,0,.5),
+    inset 2px 0 4px rgba(0,0,0,.45);
+}
+
 .lift{
   position:absolute;inset:0;
   transition:transform .5s cubic-bezier(.2,.75,.2,1);
@@ -260,6 +331,12 @@ h1.title sup{
   overflow:hidden;
   isolation:isolate;
   background:#0a0a0d;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.05),
+    inset 0 1px 0 rgba(255,255,255,.22),
+    inset 0 -5px 12px rgba(0,0,0,.6),
+    inset -3px 0 6px rgba(0,0,0,.32),
+    inset 3px 0 6px rgba(0,0,0,.28);
   -webkit-mask-image:
     radial-gradient(circle at 0 50%, #0000 0 var(--notch), #000 calc(var(--notch) + .5px)),
     radial-gradient(circle at 100% 50%, #0000 0 var(--notch), #000 calc(var(--notch) + .5px));
@@ -912,9 +989,9 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:
   };
 
   const POSTERS = [
-    { key:'A', idx:'01', name:'紫银幻魅', en:'GHOST PINK',    fan:'-7.5deg', fanY:'26px', z:1, colors:['#cbb6ff','#f7efff','#8b6cff'] },
-    { key:'B', idx:'02', name:'荧光怪诞', en:'TRICK SIGNAL',  fan:'.5deg',   fanY:'0px',  z:3, colors:['#e9ff6b','#8cffd6','#b7a8ff'] },
-    { key:'C', idx:'03', name:'橙黑惊趣', en:'PUMPKIN RIOT',  fan:'7.5deg',  fanY:'30px', z:2, colors:['#ffc8a2','#c9d6ff','#ff9440'] }
+    { key:'A', idx:'01', name:'紫银幻魅', en:'GHOST PINK',    fan:'-5deg', fanY:'18px', z:1, colors:['#cbb6ff','#f7efff','#8b6cff'] },
+    { key:'B', idx:'02', name:'荧光怪诞', en:'TRICK SIGNAL',  fan:'0deg',  fanY:'0px',  z:3, colors:['#e9ff6b','#8cffd6','#b7a8ff'] },
+    { key:'C', idx:'03', name:'橙黑惊趣', en:'PUMPKIN RIOT',  fan:'5deg',  fanY:'22px', z:2, colors:['#ffc8a2','#c9d6ff','#ff9440'] }
   ];
 
   const PALETTES = {
@@ -971,6 +1048,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:
   const app = document.getElementById('app');
   const deck = document.getElementById('deck');
   const state = Object.assign({}, DEFAULTS);
+  state.selected = null;
   let beatTimer = null;
   let beatCursor = 0;
   let hue = 0;
@@ -1094,7 +1172,8 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:
             '<div class="rim"></div>' +
             '<div class="edge-light"></div>' +
           '</div>' +
-        '</div></div>';
+        '</div></div>' +
+        '<div class="select-badge">✓</div>';
 
       slot.appendChild(card);
 
@@ -1155,7 +1234,22 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:
       const nx = clamp((e.clientX - r.left) / r.width, 0, 1);
       const ny = clamp((e.clientY - r.top) / r.height, 0, 1);
       burst(card, nx, ny);
+      selectCard(card);
     });
+  }
+
+  function selectCard(card){
+    const idx = parseInt(card.dataset.index, 10);
+    const slots = deck.querySelectorAll('.slot');
+    if(state.selected === idx){
+      // 再次点击同一卡片 → 取消选择
+      state.selected = null;
+      card.closest('.slot').classList.remove('selected');
+    }else{
+      state.selected = idx;
+      slots.forEach(s=>s.classList.remove('selected'));
+      card.closest('.slot').classList.add('selected');
+    }
   }
 
   function burst(card, nx, ny){
@@ -1398,6 +1492,8 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:
 
   function resetAll(){
     Object.assign(state, DEFAULTS);
+    state.selected = null;
+    deck.querySelectorAll('.slot.selected').forEach(s=>s.classList.remove('selected'));
     syncAll();
   }
 
